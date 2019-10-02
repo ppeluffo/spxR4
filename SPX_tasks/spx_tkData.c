@@ -29,14 +29,14 @@ static bool poll_enable = true;
 // PROTOTIPOS
 
 static void pv_data_init(void);
-static void pv_data_read_frame( void );
+static void pv_data_read_frame(void);
 static void pv_data_read_analogico( void );
 static void pv_data_read_contadores( void );
 static void pv_data_read_rangemeter( void );
 static void pv_data_read_psensor( void );
 static void pv_data_read_dinputs( void );
 static void pv_data_read_pilotos( void );
-static void pv_data_print_frame( void );
+static void pv_data_print_frame( bool print_xbee );
 static void pv_data_guardar_en_BD(void);
 static void pv_data_signal_to_tkgprs(void);;
 
@@ -80,8 +80,8 @@ TickType_t xLastWakeTime = 0;
 		// Leo analog,digital,rtc,salvo en BD e imprimo.
 		pv_data_read_frame();
 
-		// Muestro en pantalla.
-		pv_data_print_frame();
+		// Muestro en pantalla y si tengo xbee tambien lo muestro ahi.
+		pv_data_print_frame(true);
 
 		// Guardo en la BD
 		pv_data_guardar_en_BD();
@@ -105,7 +105,7 @@ TickType_t xLastWakeTime = 0;
 //------------------------------------------------------------------------------------
 // FUNCIONES PUBLICAS
 //------------------------------------------------------------------------------------
-void data_read_frame( bool polling  )
+void data_read_frame( bool polling, bool print_xbee )
 {
 	// Esta funcion puede polear y mostrar el resultado.
 	// Si la flag polling es false, no poleo. ( requerido en cmd::status )
@@ -120,7 +120,7 @@ void data_read_frame( bool polling  )
 		xSemaphoreGive( sem_DATA );
 	}
 
-	pv_data_print_frame();
+	pv_data_print_frame(print_xbee);
 
 }
 //------------------------------------------------------------------------------------
@@ -293,27 +293,47 @@ int8_t xBytes = 0;
 
 }
 //------------------------------------------------------------------------------------
-static void pv_data_print_frame( void )
+static void pv_data_print_frame( bool print_xbee )
 {
 	// Imprime el frame actual en consola
 
+bool out_xbee = false;
+
+	if (( print_xbee == true ) &&  ( systemVars.xbee == XBEE_SLAVE )) {
+			out_xbee = true;
+			IO_clr_XBEE_SLEEP();
+			vTaskDelay( ( TickType_t)( 100 / portTICK_RATE_MS ) );
+	}
+
 	// HEADER
 	xprintf_P(PSTR("frame: " ) );
+	if (out_xbee) {
+		xCom_printf_P( fdXBEE, PSTR("%s,"),systemVars.gprs_conf.dlgId);
+	}
 
 	// timeStamp.
 	xprintf_P(PSTR("%04d%02d%02d,"),data_df.rtc.year, data_df.rtc.month, data_df.rtc.day );
 	xprintf_P(PSTR("%02d%02d%02d"), data_df.rtc.hour, data_df.rtc.min, data_df.rtc.sec );
+	if (out_xbee) {
+		xCom_printf_P( fdXBEE, PSTR("%04d%02d%02d,"),data_df.rtc.year, data_df.rtc.month, data_df.rtc.day );
+		xCom_printf_P( fdXBEE, PSTR("%02d%02d%02d"), data_df.rtc.hour, data_df.rtc.min, data_df.rtc.sec );
+	}
 
-	ainputs_df_print( &data_df );
-	dinputs_df_print( &data_df );
-    counters_df_print( &data_df );
+	ainputs_df_print( &data_df, out_xbee );
+	dinputs_df_print( &data_df, out_xbee );
+    counters_df_print( &data_df, out_xbee );
 	u_df_print_range( &data_df );
 	u_df_print_psensor( &data_df );
-	pilotos_df_print( &data_df );
+	pilotos_df_print( &data_df);
 	ainputs_df_print_battery( &data_df );
 
 	// TAIL
 	xprintf_P(PSTR("\r\n\0") );
+	if (out_xbee) {
+		xCom_printf_P( fdXBEE, PSTR("\r\n\0"));
+		vTaskDelay( ( TickType_t)( 100 / portTICK_RATE_MS ) );
+		IO_set_XBEE_SLEEP();
+	}
 
 }
 //------------------------------------------------------------------------------------
@@ -373,6 +393,7 @@ static bool primer_frame = true;
 static void pv_data_signal_to_tkgprs(void)
 {
 	// Aviso a tkGprs que hay un frame listo. En modo continuo lo va a trasmitir enseguida.
+
 	if ( ! MODO_DISCRETO ) {
 		while ( xTaskNotify(xHandle_tkGprsRx, TK_FRAME_READY , eSetBits ) != pdPASS ) {
 			vTaskDelay( ( TickType_t)( 100 / portTICK_RATE_MS ) );

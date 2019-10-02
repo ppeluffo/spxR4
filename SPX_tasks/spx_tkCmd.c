@@ -248,6 +248,19 @@ uint8_t VA_cnt, VB_cnt, VA_status, VB_status;
 		xprintf_P( PSTR("  psensor: %s (%d,%d)\r\n\0"), systemVars.psensor_conf.name, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax);
 	}
 
+	// XBEE
+	switch(systemVars.xbee) {
+	case XBEE_OFF:
+		xprintf_P( PSTR("  xbee: OFF\r\n"));
+		break;
+	case XBEE_MASTER:
+		xprintf_P( PSTR("  xbee: master\r\n"));
+		break;
+	case XBEE_SLAVE:
+		xprintf_P( PSTR("  xbee: slave\r\n"));
+		break;
+	}
+
 	// doutputs
 	switch( systemVars.doutputs_conf.modo) {
 	case OFF:
@@ -317,7 +330,8 @@ uint8_t VA_cnt, VB_cnt, VA_status, VB_status;
 		xprintf_P( PSTR("  c1 [ %s | %.03f ] pw=%d,T=%d (HS)\r\n\0"),systemVars.counters_conf.name[1], systemVars.counters_conf.magpp[1], systemVars.counters_conf.pwidth[1], systemVars.counters_conf.period[1] );
 	}
 
-	data_read_frame ( false );
+	// Mustro los datos sin polear y sin sacarlos por xbee.
+	data_read_frame ( false, false );
 }
 //-----------------------------------------------------------------------------------
 static void cmdResetFunction(void)
@@ -596,7 +610,8 @@ int16_t range = 0;
 	// FRAME
 	// read frame
 	if (!strcmp_P( strupr(argv[1]), PSTR("FRAME\0")) ) {
-		data_read_frame ( true );
+		// Muestro los datos poleandolos y sin sacarlos por xbee.
+		data_read_frame ( true, false );
 		return;
 	}
 
@@ -663,6 +678,13 @@ bool retS = false;
 
 	FRTOS_CMD_makeArgv();
 
+	// XBEE
+	// config xbee {off,master,slave}
+	if (!strcmp_P( strupr(argv[1]), PSTR("XBEE\0")) ) {
+		retS = xbee_config( argv[2]);
+		retS ? pv_snprintfP_OK() : pv_snprintfP_ERR();
+		return;
+	}
 	// OUTMODE
 	// outmode {none|cons | perf | plt
 	if (!strcmp_P( strupr(argv[1]), PSTR("OUTMODE\0")) ) {
@@ -1029,6 +1051,7 @@ static void cmdHelpFunction(void)
 		xprintf_P( PSTR("  ical {ch} {imin | imax}\r\n\0"));
 		xprintf_P( PSTR("  digital {0..%d} dname tpoll\r\n\0"), ( NRO_DINPUTS - 1 ) );
 		xprintf_P( PSTR("  counter {0..%d} cname magPP pw(ms) period(ms) speed(LS/HS)\r\n\0"), ( NRO_COUNTERS - 1 ) );
+		xprintf_P( PSTR("  xbee {off,master,slave}\r\n\0"));
 
 		if ( spx_io_board == SPX_IO5CH ) {
 			xprintf_P( PSTR("  rangemeter {on|off}\r\n\0"));
@@ -1353,9 +1376,9 @@ bool detail = false;
 		// Imprimo el registro
 		xprintf_P( PSTR("CTL=%d LINE=%04d%02d%02d,%02d%02d%02d\0"), l_fat.rdPTR, df.rtc.year, df.rtc.month, df.rtc.day, df.rtc.hour, df.rtc.min, df.rtc.sec );
 
-		ainputs_df_print( &df );
-		dinputs_df_print( &df );
-	    counters_df_print( &df );
+		ainputs_df_print( &df, false );
+		dinputs_df_print( &df, false );
+	    counters_df_print( &df, false );
 		u_df_print_range( &df );
 		u_df_print_psensor( &df );
 		ainputs_df_print_battery( &df );

@@ -64,7 +64,7 @@
 // DEFINES
 //------------------------------------------------------------------------------------
 #define SPX_FW_REV "2.0.5"
-#define SPX_FW_DATE "@ 20190919"
+#define SPX_FW_DATE "@ 20190920"
 
 #define SPX_HW_MODELO "spxR4 HW:xmega256A3B R1.1"
 #define SPX_FTROS_VERSION "FW:FRTOS10 TICKLESS"
@@ -104,6 +104,7 @@
 #define tkGprs_rx_STACK_SIZE	1024
 #define tkGprs_tx_STACK_SIZE	1024
 #define tkDinputs_STACK_SIZE	512
+#define tkXbee_STACK_SIZE		512
 
 #define tkCtl_TASK_PRIORITY	 		( tskIDLE_PRIORITY + 1 )
 #define tkCmd_TASK_PRIORITY	 		( tskIDLE_PRIORITY + 1 )
@@ -113,6 +114,7 @@
 #define tkGprs_rx_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 #define tkGprs_tx_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 #define tkDinputs_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
+#define tkXbee_TASK_PRIORITY		( tskIDLE_PRIORITY + 1 )
 
 #define TDIAL_MIN_DISCRETO 900
 
@@ -120,8 +122,18 @@
 
 // Mensajes entre tareas
 #define TK_FRAME_READY			0x01	//
+#define SGN_FRAME_READY			0x01
+#define SGN_PRENDER_GPRS		0x02	//
+#define SGN_APAGAR_GPRS			0x03	//
+#define SGN_XBEE_IS_DOWN		0x04	//
+#define SGN_XBEE_IS_UP			0x05	//
+#define SGN_LOCAL_GPRS_IS_DOWN	0x06	//
+#define SGN_LOCAL_GPRS_IS_UP	0x07	//
+#define SGN_GPRS_QUERY			0x08	//
+#define SGN_XBEE_FRAME_READY	0x09	//
+#define SGN_XBEE_ACK			0x0A	//
 
-typedef enum { DEBUG_NONE = 0, DEBUG_COUNTER, DEBUG_DATA, DEBUG_GPRS, DEBUG_OUTPUTS, DEBUG_PILOTO } t_debug;
+typedef enum { DEBUG_NONE = 0, DEBUG_COUNTER, DEBUG_DATA, DEBUG_GPRS, DEBUG_OUTPUTS, DEBUG_PILOTO, DEBUG_XBEE } t_debug;
 typedef enum { USER_NORMAL, USER_TECNICO } usuario_t;
 typedef enum { SPX_IO5CH = 0, SPX_IO8CH } ioboard_t;
 typedef enum { CONSIGNA_OFF = 0, CONSIGNA_DIURNA, CONSIGNA_NOCTURNA } consigna_t;
@@ -131,8 +143,10 @@ typedef enum { OFF = 0, CONSIGNA, PERFORACIONES, PILOTOS  } doutputs_modo_t;
 typedef enum { CNT_LOW_SPEED = 0, CNT_HIGH_SPEED  } dcounters_modo_t;
 typedef enum { OPEN = 0, CLOSE } t_valve_status;
 typedef enum { VR_CHICA = 0, VR_MEDIA, VR_GRANDE } t_valvula_reguladora;
+typedef enum { XBEE_OFF = 0, XBEE_MASTER, XBEE_SLAVE } t_xbee;
+typedef enum { LINK_UP = 0, LINK_DOWN } t_link;
 
-TaskHandle_t xHandle_idle, xHandle_tkCtl, xHandle_tkCmd, xHandle_tkCounter0 ,xHandle_tkCounter1 , xHandle_tkData, xHandle_tkDoutputs, xHandle_tkDinputs, xHandle_tkGprsRx, xHandle_tkGprsTx;
+TaskHandle_t xHandle_idle, xHandle_tkCtl, xHandle_tkCmd, xHandle_tkCounter0 ,xHandle_tkCounter1 , xHandle_tkData, xHandle_tkDoutputs, xHandle_tkDinputs, xHandle_tkGprsRx, xHandle_tkGprsTx, xHandle_tkXbee;
 
 bool startTask;
 uint8_t spx_io_board;
@@ -149,6 +163,10 @@ xSemaphoreHandle sem_DATA;
 StaticSemaphore_t DATA_xMutexBuffer;
 #define MSTOTAKEDATASEMPH ((  TickType_t ) 10 )
 
+xSemaphoreHandle sem_XBEE;
+StaticSemaphore_t XBEE_xMutexBuffer;
+#define MSTOTAKEXBEESEMPH ((  TickType_t ) 10 )
+
 void tkCtl(void * pvParameters);
 void tkCmd(void * pvParameters);
 void tkCounter0(void * pvParameters);
@@ -158,6 +176,7 @@ void tkDoutputs(void * pvParameters);
 void tkGprsRx(void * pvParameters);
 void tkGprsTx(void * pvParameters);
 void tkDinputs(void * pvParameters);
+void tkXbee(void * pvParameters);
 
 #define DLGID_LENGTH		12
 #define PARAMNAME_LENGTH	5
@@ -319,6 +338,7 @@ typedef struct {
 	gprs_conf_t	gprs_conf;
 	psensor_conf_t psensor_conf;
 
+	uint8_t xbee;
 	// El checksum DEBE ser el ultimo byte del systemVars !!!!
 	uint8_t checksum;
 
@@ -342,6 +362,9 @@ void u_format_memory(void);
 void u_df_print_range( dataframe_s *df );
 void u_df_print_psensor( dataframe_s *df );
 
+bool u_check_more_Rcds4Del ( FAT_t *fat );
+bool u_check_more_Rcds4Tx(void);
+
 // TKCTL
 void ctl_watchdog_kick(uint8_t taskWdg, uint16_t timeout_in_secs );
 void ctl_print_wdg_timers(void);
@@ -357,7 +380,7 @@ void dinputs_init( void );
 int8_t dinputs_read_channel ( uint8_t din );
 void dinputs_config_defaults(void);
 bool dinputs_config_channel( uint8_t channel,char *s_aname ,char *s_tpoll );
-void dinputs_df_print( dataframe_s *df );
+void dinputs_df_print( dataframe_s *df, bool print_xbee );
 
 // RANGE
 int16_t range_read(void);
@@ -369,6 +392,13 @@ int16_t psensor_read(void);
 bool psensor_config ( char *s_pname, char *s_pmin, char *s_pmax  );
 void psensor_config_defaults(void);
 
+// XBEE
+void xbee_config_defaults(void);
+bool xbee_config ( char *s_mode );
+void pub_xbee_tx_DATAFRAME(void);
+void pub_xbee_clear_txframe_flag(void);
+char *pub_xbee_get_buffer_ptr(void);
+void pub_xbee_tx_ACK( char *msg );
 
 // AINPUTS
 void ainputs_prender_12V_sensors(void);
@@ -379,8 +409,8 @@ uint16_t ainputs_read_battery_raw(void);
 float ainputs_read_battery(void);
 void ainputs_awake(void);
 void ainputs_sleep(void);
-void ainputs_df_print( dataframe_s *df );
-void ainputs_df_print_battery( dataframe_s *df );
+void ainputs_df_print( dataframe_s *df, bool print_xbee );
+void ainputs_df_print_battery( dataframe_s *df);
 
 bool ainputs_config_channel( uint8_t channel,char *s_aname,char *s_imin,char *s_imax,char *s_mmin,char *s_mmax );
 void ainputs_config_defaults(void);
@@ -395,10 +425,10 @@ float analog_convert_ieqv( float i_real, uint8_t io_channel );
 float counters_read_channel( uint8_t cnt, bool reset_counter );
 void counters_config_defaults(void);
 bool counters_config_channel( uint8_t channel,char *s_param0, char *s_param1, char *s_param2, char *s_param3, char *s_param4 );
-void counters_df_print( dataframe_s *df );
+void counters_df_print( dataframe_s *df, bool print_xbee );
 
 // TKDATA
-void data_read_frame( bool polling );
+void data_read_frame( bool polling, bool print_xbee );
 void data_read_pAB( float *pA, float *pB );
 void signal_tkData_poll_on(void);
 void signal_tkData_poll_off(void);
@@ -445,8 +475,9 @@ uint8_t wdg_resetCause;
 #define WDG_GPRSRX		6
 #define WDG_GPRSTX		7
 #define WDG_DINPUTS		8
+#define WDG_XBEE		9
 
-#define NRO_WDGS		9
+#define NRO_WDGS		10
 
 #define WDG_DOUT_TIMEOUT	100
 

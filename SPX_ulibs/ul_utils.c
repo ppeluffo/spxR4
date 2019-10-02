@@ -249,11 +249,11 @@ void u_load_defaults( char *opt )
 	dinputs_config_defaults();
 	ainputs_config_defaults();
 	range_config_defaults();
-	psensor_config_defaults();
-
 	doutputs_config_defaults(  opt );
-
 	u_gprs_load_defaults( opt );
+
+	psensor_config_defaults();
+	xbee_config_defaults();
 
 }
 //------------------------------------------------------------------------------------
@@ -354,6 +354,8 @@ void u_df_print_psensor( dataframe_s *df )
 {
 	// Range
 	if ( systemVars.psensor_enabled ) {
+		if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
+			return;
 		xprintf_P(PSTR(",%s=%d"), systemVars.psensor_conf.name, df->psensor );
 	}
 }
@@ -389,4 +391,49 @@ void u_format_memory(void)
 
 }
  //------------------------------------------------------------------------------------
+bool u_check_more_Rcds4Del ( FAT_t *fat )
+{
+	// Devuelve si aun quedan registros para borrar del FS
 
+	memset ( fat, '\0', sizeof( FAT_t));
+
+	FAT_read(fat);
+
+	if ( fat->rcds4del > 0 ) {
+		return(true);
+	} else {
+		return(false);
+	}
+
+}
+//------------------------------------------------------------------------------------
+bool u_check_more_Rcds4Tx(void)
+{
+
+	/* Veo si hay datos en memoria para trasmitir
+	 * Memoria vacia: rcds4wr = MAX, rcds4del = 0;
+	 * Memoria llena: rcds4wr = 0, rcds4del = MAX;
+	 * Memoria toda leida: rcds4rd = 0;
+	 */
+
+//	gprs_fat.wrPTR,gprs_fat.rdPTR, gprs_fat.delPTR,gprs_fat.rcds4wr,gprs_fat.rcds4rd,gprs_fat.rcds4del );
+
+bool retS = false;
+FAT_t *fat;
+
+	memset( fat, '\0', sizeof ( FAT_t));
+	FAT_read(&fat);
+
+	// Si hay registros para leer
+	if ( fat->rcds4rd > 0) {
+		retS = true;
+	} else {
+		retS = false;
+		if ( systemVars.debug == DEBUG_GPRS ) {
+			xprintf_P( PSTR("GPRS: bd EMPTY\r\n\0"));
+		}
+	}
+
+	return(retS);
+}
+//------------------------------------------------------------------------------------
