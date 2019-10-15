@@ -902,6 +902,7 @@ char *tk_id = NULL;
 char *tk_pname = NULL;
 char *tk_pmin = NULL;
 char *tk_pmax = NULL;
+char *tk_offset = NULL;
 char *delim = ",=:><";
 char *p = NULL;
 
@@ -921,7 +922,8 @@ char *p = NULL;
 	tk_pname = strsep(&stringp,delim);		// pname
 	tk_pmin = strsep(&stringp,delim);		// pmin
 	tk_pmax  = strsep(&stringp,delim); 		// pmax
-	psensor_config( tk_pname, tk_pmin, tk_pmax );
+	tk_offset  = strsep(&stringp,delim); 	//
+	psensor_config( tk_pname, tk_pmin, tk_pmax, tk_offset );
 	if ( systemVars.debug == DEBUG_GPRS ) {
 		xprintf_P( PSTR("GPRS: Reconfig PSENSOR\r\n\0"));
 	}

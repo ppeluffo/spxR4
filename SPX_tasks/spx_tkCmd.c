@@ -241,24 +241,12 @@ uint8_t VA_cnt, VB_cnt, VA_status, VB_status;
 		} else {
 			xprintf_P( PSTR("  rangeMeter: OFF\r\n"));
 		}
-	}
 
-	// Psensor
-	if ( systemVars.psensor_enabled == true ) {
-		xprintf_P( PSTR("  psensor: %s (%d,%d)\r\n\0"), systemVars.psensor_conf.name, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax);
-	}
+		// Psensor
+		if ( strcmp ( systemVars.psensor_conf.name, "X" ) != 0 ) {
+			xprintf_P( PSTR("  psensor: %s (%.03f,%.03f, %.03f)\r\n\0"), systemVars.psensor_conf.name, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax, systemVars.psensor_conf.offset);
+		}
 
-	// XBEE
-	switch(systemVars.xbee) {
-	case XBEE_OFF:
-		xprintf_P( PSTR("  xbee: OFF\r\n"));
-		break;
-	case XBEE_MASTER:
-		xprintf_P( PSTR("  xbee: master\r\n"));
-		break;
-	case XBEE_SLAVE:
-		xprintf_P( PSTR("  xbee: slave\r\n"));
-		break;
 	}
 
 	// doutputs
@@ -330,8 +318,8 @@ uint8_t VA_cnt, VB_cnt, VA_status, VB_status;
 		xprintf_P( PSTR("  c1 [ %s | %.03f ] pw=%d,T=%d (HS)\r\n\0"),systemVars.counters_conf.name[1], systemVars.counters_conf.magpp[1], systemVars.counters_conf.pwidth[1], systemVars.counters_conf.period[1] );
 	}
 
-	// Mustro los datos sin polear y sin sacarlos por xbee.
-	data_read_frame ( false, false );
+	// Muestro los datos sin polear
+	data_read_frame ( false );
 }
 //-----------------------------------------------------------------------------------
 static void cmdResetFunction(void)
@@ -534,7 +522,7 @@ int16_t range = 0;
 	// PSENS
 	// read psens
 	if (!strcmp_P( strupr(argv[1]), PSTR("PSENSOR\0")) && ( tipo_usuario == USER_TECNICO) ) {
-		PSENS_test_read ();
+		psensor_test_read ();
 		return;
 	}
 
@@ -611,7 +599,7 @@ int16_t range = 0;
 	// read frame
 	if (!strcmp_P( strupr(argv[1]), PSTR("FRAME\0")) ) {
 		// Muestro los datos poleandolos y sin sacarlos por xbee.
-		data_read_frame ( true, false );
+		data_read_frame ( true );
 		return;
 	}
 
@@ -678,13 +666,6 @@ bool retS = false;
 
 	FRTOS_CMD_makeArgv();
 
-	// XBEE
-	// config xbee {off,master,slave}
-	if (!strcmp_P( strupr(argv[1]), PSTR("XBEE\0")) ) {
-		retS = xbee_config( argv[2]);
-		retS ? pv_snprintfP_OK() : pv_snprintfP_ERR();
-		return;
-	}
 	// OUTMODE
 	// outmode {none|cons | perf | plt
 	if (!strcmp_P( strupr(argv[1]), PSTR("OUTMODE\0")) ) {
@@ -823,7 +804,7 @@ bool retS = false;
 	// PSENSOR
 	// config psensor pmin pmax
 	if (!strcmp_P( strupr(argv[1]), PSTR("PSENSOR\0")) ) {
-		psensor_config( argv[2], argv[3], argv[4]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
+		psensor_config( argv[2], argv[3], argv[4], argv[5]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
 		return;
 	}
 
@@ -1007,12 +988,9 @@ static void cmdHelpFunction(void)
 			if ( spx_io_board == SPX_IO5CH ) {
 				xprintf_P( PSTR("  ach {0..4}, battery\r\n\0"));
 				xprintf_P( PSTR("  range\r\n\0"));
+				xprintf_P( PSTR("  psensor\r\n\0"));
 			} else if ( spx_io_board == SPX_IO8CH ) {
 				xprintf_P( PSTR("  ach {0..7}\r\n\0"));
-			}
-
-			if ( systemVars.psensor_enabled == true ) {
-				xprintf_P( PSTR("  psensor\r\n\0"));
 			}
 
 			xprintf_P( PSTR("  gprs (rsp,rts,dcd,ri)\r\n\0"));
@@ -1051,14 +1029,10 @@ static void cmdHelpFunction(void)
 		xprintf_P( PSTR("  ical {ch} {imin | imax}\r\n\0"));
 		xprintf_P( PSTR("  digital {0..%d} dname tpoll\r\n\0"), ( NRO_DINPUTS - 1 ) );
 		xprintf_P( PSTR("  counter {0..%d} cname magPP pw(ms) period(ms) speed(LS/HS)\r\n\0"), ( NRO_COUNTERS - 1 ) );
-		xprintf_P( PSTR("  xbee {off,master,slave}\r\n\0"));
 
 		if ( spx_io_board == SPX_IO5CH ) {
 			xprintf_P( PSTR("  rangemeter {on|off}\r\n\0"));
-		}
-
-		if ( systemVars.psensor_enabled == true ) {
-			xprintf_P( PSTR("  psensor {name} {pmin} {pmax}\r\n\0"));
+			xprintf_P( PSTR("  psensor {name} {pmin} {pmax} {offset}\r\n\0"));
 		}
 
 		xprintf_P( PSTR("  outmode { off | perf | plt | cons }\r\n\0"));
@@ -1376,9 +1350,9 @@ bool detail = false;
 		// Imprimo el registro
 		xprintf_P( PSTR("CTL=%d LINE=%04d%02d%02d,%02d%02d%02d\0"), l_fat.rdPTR, df.rtc.year, df.rtc.month, df.rtc.day, df.rtc.hour, df.rtc.min, df.rtc.sec );
 
-		ainputs_df_print( &df, false );
-		dinputs_df_print( &df, false );
-	    counters_df_print( &df, false );
+		ainputs_df_print( &df );
+		dinputs_df_print( &df );
+	    counters_df_print( &df );
 		u_df_print_range( &df );
 		u_df_print_psensor( &df );
 		ainputs_df_print_battery( &df );

@@ -19,6 +19,7 @@ static void pv_transmitir_df_analogicos( void );
 static void pv_transmitir_df_digitales( void );
 static void pv_transmitir_df_contadores( void );
 static void pv_transmitir_df_range( void );
+static void pv_transmitir_df_psensor( void );
 static void pv_transmitir_df_bateria( void );
 static void pv_transmitir_df_pilotos( void );
 
@@ -302,6 +303,7 @@ size_t bRead;
 		memcpy( &gprs_df.dinputsA, &gprs_dr.df.io5.dinputsA, ( NRO_DINPUTS * sizeof(uint16_t)));
 		memcpy( &gprs_df.counters, &gprs_dr.df.io5.counters, ( NRO_COUNTERS * sizeof(float)));
 		gprs_df.range = gprs_dr.df.io5.range;
+		gprs_df.psensor = gprs_dr.df.io5.psensor;
 		gprs_df.battery = gprs_dr.df.io5.battery;
 		memcpy( &gprs_df.rtc, &gprs_dr.rtc, sizeof(RtcTimeType_t) );
 		memcpy( &gprs_df.plt_Vcounters, &gprs_dr.df.io5.plt_Vcounters, 2 * sizeof(uint8_t) );
@@ -329,6 +331,7 @@ size_t bRead;
 	pv_transmitir_df_digitales();
 	pv_transmitir_df_contadores();
 	pv_transmitir_df_range();
+	pv_transmitir_df_psensor();
 	pv_transmitir_df_pilotos();
 	pv_transmitir_df_bateria();
 
@@ -407,6 +410,19 @@ static void pv_transmitir_df_range( void )
 	}
 }
 //------------------------------------------------------------------------------------
+static void pv_transmitir_df_psensor( void )
+{
+	// Range
+	if ( ( spx_io_board == SPX_IO5CH ) && ( strcmp_P( strupr(systemVars.psensor_conf.name ), PSTR("X")) != 0 ) ) {
+		xCom_printf_P( fdGPRS, PSTR(",%s=%.03f"), systemVars.psensor_conf.name, gprs_df.psensor );
+		// DEBUG & LOG
+		if ( systemVars.debug ==  DEBUG_GPRS ) {
+			xprintf_P(PSTR(",%s=%.03f"), systemVars.psensor_conf.name, gprs_df.psensor );
+		}
+	}
+}
+//------------------------------------------------------------------------------------
+
 static void pv_transmitir_df_pilotos( void )
 {
 	// Pilotos VA/VB cnt

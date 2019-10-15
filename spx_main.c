@@ -161,14 +161,12 @@ int main( void )
 	}
 
 	frtos_open(fdGPRS, 115200);
-	frtos_open(fdXBEE, 9600);
 	frtos_open(fdI2C, 100 );
 
 	// Creo los semaforos
 	sem_SYSVars = xSemaphoreCreateMutexStatic( &SYSVARS_xMutexBuffer );
 	sem_WDGS = xSemaphoreCreateMutexStatic( &WDGS_xMutexBuffer );
 	sem_DATA = xSemaphoreCreateMutexStatic( &DATA_xMutexBuffer );
-	sem_XBEE = xSemaphoreCreateMutexStatic( &XBEE_xMutexBuffer );
 
 	xprintf_init();
 	FAT_init();
@@ -185,7 +183,6 @@ int main( void )
 	xTaskCreate(tkGprsRx, "RX", tkGprs_rx_STACK_SIZE, NULL, tkGprs_rx_TASK_PRIORITY,  &xHandle_tkGprsRx );
 	xTaskCreate(tkGprsTx, "TX", tkGprs_tx_STACK_SIZE, NULL, tkGprs_tx_TASK_PRIORITY,  &xHandle_tkGprsTx );
 	xTaskCreate(tkDinputs, "DIN", tkDinputs_STACK_SIZE, NULL, tkDinputs_TASK_PRIORITY,  &xHandle_tkDinputs );
-	xTaskCreate(tkXbee, "XBEE", tkXbee_STACK_SIZE, NULL, tkXbee_TASK_PRIORITY,  &xHandle_tkXbee );
 
 	/* Arranco el RTOS. */
 	vTaskStartScheduler();

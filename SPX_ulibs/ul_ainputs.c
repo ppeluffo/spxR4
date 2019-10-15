@@ -484,7 +484,7 @@ void ainputs_sleep(void)
 	}
 }
 //------------------------------------------------------------------------------------
-void ainputs_df_print( dataframe_s *df, bool print_xbee )
+void ainputs_df_print( dataframe_s *df )
 {
 
 uint8_t channel = 0;
@@ -495,9 +495,7 @@ uint8_t channel = 0;
 			continue;
 
 		xprintf_P(PSTR(",%s=%.02f"),systemVars.ainputs_conf.name[channel], df->ainputs[channel] );
-		if (print_xbee) {
-			xCom_printf_P( fdXBEE, PSTR(",%s=%.02f"),systemVars.ainputs_conf.name[channel], df->ainputs[channel] );
-		}
+
 	}
 }
 //------------------------------------------------------------------------------------

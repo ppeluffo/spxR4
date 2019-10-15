@@ -253,7 +253,7 @@ void u_load_defaults( char *opt )
 	u_gprs_load_defaults( opt );
 
 	psensor_config_defaults();
-	xbee_config_defaults();
+
 
 }
 //------------------------------------------------------------------------------------
@@ -353,11 +353,11 @@ void u_df_print_range( dataframe_s *df )
 void u_df_print_psensor( dataframe_s *df )
 {
 	// Range
-	if ( systemVars.psensor_enabled ) {
-		if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
-			return;
-		xprintf_P(PSTR(",%s=%d"), systemVars.psensor_conf.name, df->psensor );
-	}
+	if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
+		return;
+
+	xprintf_P(PSTR(",%s=%.03f"), systemVars.psensor_conf.name, df->psensor );
+
 }
 //------------------------------------------------------------------------------------
 void u_format_memory(void)

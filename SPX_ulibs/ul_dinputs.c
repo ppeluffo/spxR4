@@ -100,7 +100,7 @@ int8_t rdBytes = 0;
 
 }
 //------------------------------------------------------------------------------------
-void dinputs_df_print( dataframe_s *df, bool print_xbee )
+void dinputs_df_print( dataframe_s *df )
 {
 	// Canales digitales.
 
@@ -111,9 +111,7 @@ uint8_t channel = 0;
 			continue;
 
 		xprintf_P(PSTR(",%s=%d"), systemVars.dinputs_conf.name[channel], df->dinputsA[channel] );
-		if (print_xbee) {
-			xCom_printf_P( fdXBEE, PSTR(",%s=%d"), systemVars.dinputs_conf.name[channel], df->dinputsA[channel] );
-		}
+
 	}
 }
 //------------------------------------------------------------------------------------

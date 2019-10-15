@@ -545,7 +545,7 @@ uint8_t i = 0;
 	}
 
 	// Configuracion del psensor
-	if ( systemVars.psensor_enabled ) {
+	if ( strcmp ( systemVars.psensor_conf.name, "X" ) != 0 ) {
 		xCom_printf_P( fdGPRS,PSTR("&PSENSOR=%s,%d,%d\0"),systemVars.psensor_conf.name, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax);
 		if ( systemVars.debug ==  DEBUG_GPRS ) {
 			xprintf_P( PSTR("&PSENSOR=%s,%d,%d\0"),systemVars.psensor_conf.name,systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax);
