@@ -1355,6 +1355,7 @@ bool detail = false;
 	    counters_df_print( &df );
 		u_df_print_range( &df );
 		u_df_print_psensor( &df );
+		u_df_print_temp( &df );
 		ainputs_df_print_battery( &df );
 
 		xprintf_P(PSTR( "\r\n"));

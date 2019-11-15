@@ -360,6 +360,17 @@ void u_df_print_psensor( dataframe_s *df )
 
 }
 //------------------------------------------------------------------------------------
+void u_df_print_temp( dataframe_s *df )
+{
+	// Range
+	if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
+		return;
+
+	xprintf_P(PSTR(",TEMP=%.03f"), df->temp );
+
+}
+//------------------------------------------------------------------------------------
+
 void u_format_memory(void)
 {
 	// Nadie debe usar la memoria !!!

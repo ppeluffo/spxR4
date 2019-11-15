@@ -59,12 +59,13 @@
 #include "l_rangeMeter.h"
 #include "l_bytes.h"
 #include "l_psensor.h"
+#include "l_adt7410.h"
 
 //------------------------------------------------------------------------------------
 // DEFINES
 //------------------------------------------------------------------------------------
-#define SPX_FW_REV "2.0.6"
-#define SPX_FW_DATE "@ 20191015"
+#define SPX_FW_REV "2.0.7"
+#define SPX_FW_DATE "@ 20191115"
 
 #define SPX_HW_MODELO "spxR4 HW:xmega256A3B R1.1"
 #define SPX_FTROS_VERSION "FW:FRTOS10 TICKLESS"
@@ -179,7 +180,8 @@ typedef struct {
 	uint8_t dinputsA[IO5_DINPUTS_CHANNELS];		// 1 * 2 =  2
 	float counters[IO5_COUNTER_CHANNELS];		// 4 * 2 =  8
 	int16_t range;								// 2 * 1 =  2
-	float psensor;							// 2 * 1 =  2
+	float psensor;							    // 2 * 1 =  2
+	float temp;
 	float battery;								// 4 * 1 =  4
 	uint8_t plt_Vcounters[2];					// 2 * 1 =  2
 } st_io5_t;										// ----- = 40
@@ -209,6 +211,7 @@ typedef struct {
 	float counters[MAX_COUNTER_CHANNELS];
 	int16_t range;
 	float psensor;
+	float temp;
 	float battery;
 	RtcTimeType_t rtc;
 	uint8_t plt_Vcounters[2];
@@ -342,6 +345,7 @@ void u_format_memory(void);
 
 void u_df_print_range( dataframe_s *df );
 void u_df_print_psensor( dataframe_s *df );
+void u_df_print_temp( dataframe_s *df );
 
 bool u_check_more_Rcds4Del ( FAT_t *fat );
 bool u_check_more_Rcds4Tx(void);

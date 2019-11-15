@@ -34,6 +34,7 @@ static void pv_data_read_analogico( void );
 static void pv_data_read_contadores( void );
 static void pv_data_read_rangemeter( void );
 static void pv_data_read_psensor( void );
+static void pv_data_read_temp( void );
 static void pv_data_read_dinputs( void );
 static void pv_data_read_pilotos( void );
 static void pv_data_print_frame( void );
@@ -245,6 +246,18 @@ static void pv_data_read_psensor( void )
 
 }
 //------------------------------------------------------------------------------------
+static void pv_data_read_temp( void )
+{
+
+	// La temp. esta asociada al sensor de presion !!!
+	if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
+		return;
+
+	psensor_read(&data_df.temp);
+
+}
+//------------------------------------------------------------------------------------
+
 static void pv_data_read_dinputs( void )
 {
 uint8_t ch;
@@ -288,6 +301,7 @@ int8_t xBytes = 0;
     pv_data_read_dinputs();
     pv_data_read_rangemeter();
     pv_data_read_psensor();
+    pv_data_read_temp();
     pv_data_read_pilotos();
 
 	// Agrego el timestamp
@@ -313,6 +327,7 @@ static void pv_data_print_frame( void)
     counters_df_print( &data_df );
 	u_df_print_range( &data_df );
 	u_df_print_psensor( &data_df );
+	u_df_print_temp( &data_df );
 	pilotos_df_print( &data_df);
 	ainputs_df_print_battery( &data_df );
 
@@ -347,6 +362,7 @@ static bool primer_frame = true;
 		memcpy( &data_dr.df.io5.counters, &data_df.counters, ( NRO_COUNTERS * sizeof(float)));
 		data_dr.df.io5.range = data_df.range;
 		data_dr.df.io5.psensor = data_df.psensor;
+		data_dr.df.io5.temp = data_df.temp;
 		data_dr.df.io5.battery = data_df.battery;
 		memcpy( &data_dr.rtc, &data_df.rtc, sizeof(RtcTimeType_t) );
 		memcpy( &data_dr.df.io5.plt_Vcounters, &data_df.plt_Vcounters, 2 * sizeof(uint8_t) );
