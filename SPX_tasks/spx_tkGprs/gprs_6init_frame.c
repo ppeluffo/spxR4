@@ -921,9 +921,9 @@ char *delim = ",=:;><";
 		tk_pMax  = strsep(&stringp,delim);		// 28.5
 		tk_offset  = strsep(&stringp,delim);	// 0.0
 
-		xprintf_P(PSTR("GPRS DEBUG STRINGP [%s]\r\n"), stringp);
-		xprintf_P(PSTR("GPRS DEBUG PMAX [%s]\r\n"), tk_pMax);
-		xprintf_P(PSTR("GPRS DEBUG OFFSET [%s]\r\n"), tk_offset);
+//		xprintf_P(PSTR("GPRS DEBUG STRINGP [%s]\r\n"), stringp);
+//		xprintf_P(PSTR("GPRS DEBUG PMAX [%s]\r\n"), tk_pMax);
+//		xprintf_P(PSTR("GPRS DEBUG OFFSET [%s]\r\n"), tk_offset);
 
 		psensor_config(tk_name, tk_countMin, tk_countMax, tk_pMin, tk_pMax, tk_offset );
 

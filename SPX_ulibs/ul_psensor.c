@@ -34,33 +34,33 @@ bool psensor_config ( char *s_pname, char *s_countMin, char *s_countMax, char *s
 
 	if ( s_pname != NULL ) {
 		snprintf_P( systemVars.psensor_conf.name, PARAMNAME_LENGTH, PSTR("%s\0"), s_pname );
-		xprintf_P(PSTR("DEBUG NAME %s\r\n"), s_pname);
+//		xprintf_P(PSTR("DEBUG NAME %s\r\n"), s_pname);
 	}
 
 	if ( s_countMin != NULL ) {
 		systemVars.psensor_conf.count_min = atoi(s_countMin);
-		xprintf_P(PSTR("DEBUG CMIN [%s] %d\r\n"), s_countMin, systemVars.psensor_conf.count_min);
+//		xprintf_P(PSTR("DEBUG CMIN [%s] %d\r\n"), s_countMin, systemVars.psensor_conf.count_min);
 	}
 
 
 	if ( s_countMax != NULL ) {
 		systemVars.psensor_conf.count_max = atoi(s_countMax);
-		xprintf_P(PSTR("DEBUG CMAX [%s] %d\r\n"), s_countMax, systemVars.psensor_conf.count_max);
+//		xprintf_P(PSTR("DEBUG CMAX [%s] %d\r\n"), s_countMax, systemVars.psensor_conf.count_max);
 	}
 
 	if ( s_pmin != NULL ) {
 		systemVars.psensor_conf.pmin = atof(s_pmin);
-		xprintf_P(PSTR("DEBUG PMIN [%s] %.02f\r\n"), s_pmin, systemVars.psensor_conf.pmin);
+//		xprintf_P(PSTR("DEBUG PMIN [%s] %.02f\r\n"), s_pmin, systemVars.psensor_conf.pmin);
 	}
 
 	if ( s_pmax != NULL ) {
 		systemVars.psensor_conf.pmax = atof(s_pmax);
-		xprintf_P(PSTR("DEBUG PMAX [%s] %.02f\r\n"), s_pmax, systemVars.psensor_conf.pmax);
+//		xprintf_P(PSTR("DEBUG PMAX [%s] %.02f\r\n"), s_pmax, systemVars.psensor_conf.pmax);
 	}
 
 	if ( s_offset != NULL ) {
 		systemVars.psensor_conf.offset = atof(s_offset);
-		xprintf_P(PSTR("DEBUG OFFSET [%s] %.02f\r\n"), s_offset, systemVars.psensor_conf.offset);
+//		xprintf_P(PSTR("DEBUG OFFSET [%s] %.02f\r\n"), s_offset, systemVars.psensor_conf.offset);
 	}
 
 	return(true);
