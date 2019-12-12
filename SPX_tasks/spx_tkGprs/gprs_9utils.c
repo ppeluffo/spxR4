@@ -542,14 +542,15 @@ uint8_t i = 0;
 			}
 		}
 
-	}
+		// Configuracion del psensor
+		if ( strcmp ( systemVars.psensor_conf.name, "X" ) != 0 ) {
+			xCom_printf_P( fdGPRS,PSTR("&PSENSOR=%s,%d,%d,%.01f,%.01f,%.01f\0"),systemVars.psensor_conf.name, systemVars.psensor_conf.count_min, systemVars.psensor_conf.count_max,systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax, systemVars.psensor_conf.offset );
 
-	// Configuracion del psensor
-	if ( strcmp ( systemVars.psensor_conf.name, "X" ) != 0 ) {
-		xCom_printf_P( fdGPRS,PSTR("&PSENSOR=%s,%d,%d\0"),systemVars.psensor_conf.name, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax);
-		if ( systemVars.debug ==  DEBUG_GPRS ) {
-			xprintf_P( PSTR("&PSENSOR=%s,%d,%d\0"),systemVars.psensor_conf.name,systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax);
+			if ( systemVars.debug ==  DEBUG_GPRS ) {
+				xprintf_P( PSTR("&PSENSOR=%s,%d,%d,%.01f,%.01f,%.01f\0"),systemVars.psensor_conf.name, systemVars.psensor_conf.count_min, systemVars.psensor_conf.count_max,systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax, systemVars.psensor_conf.offset );
+			}
 		}
+
 	}
 
 	// doutputs

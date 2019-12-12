@@ -23,9 +23,8 @@
 #define BUSADDR_INA_A			0x80
 #define BUSADDR_INA_B			0x82
 #define BUSADDR_INA_C			0x86
-#define BUSADDR_PSENS			0x50
+#define BUSADDR_BPS120			0x50
 #define BUSADDR_ADT7410			0x90
-
 
 int8_t I2C_read( uint8_t i2c_bus_address, uint32_t rdAddress, char *data, uint8_t length );
 int8_t I2C_write( uint8_t i2c_bus_address, uint32_t wrAddress, char *data, uint8_t length );

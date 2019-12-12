@@ -417,10 +417,10 @@ static void pv_transmitir_df_psensor( void )
 {
 	// Range
 	if ( ( spx_io_board == SPX_IO5CH ) && ( strcmp_P( strupr(systemVars.psensor_conf.name ), PSTR("X")) != 0 ) ) {
-		xCom_printf_P( fdGPRS, PSTR(",%s=%.03f"), systemVars.psensor_conf.name, gprs_df.psensor );
+		xCom_printf_P( fdGPRS, PSTR(",%s=%.01f"), systemVars.psensor_conf.name, gprs_df.psensor );
 		// DEBUG & LOG
 		if ( systemVars.debug ==  DEBUG_GPRS ) {
-			xprintf_P(PSTR(",%s=%.03f"), systemVars.psensor_conf.name, gprs_df.psensor );
+			xprintf_P(PSTR(",%s=%.01f"), systemVars.psensor_conf.name, gprs_df.psensor );
 		}
 	}
 }
@@ -429,10 +429,10 @@ static void pv_transmitir_df_temp( void )
 {
 	// Range
 	if ( ( spx_io_board == SPX_IO5CH ) && ( strcmp_P( strupr(systemVars.psensor_conf.name ), PSTR("X")) != 0 ) ) {
-		xCom_printf_P( fdGPRS, PSTR(",TEMP=%.03f"), gprs_df.temp );
+		xCom_printf_P( fdGPRS, PSTR(",TEMP=%.01f"), gprs_df.temp );
 		// DEBUG & LOG
 		if ( systemVars.debug ==  DEBUG_GPRS ) {
-			xprintf_P(PSTR(",TEMP=%.03f"), gprs_df.temp );
+			xprintf_P(PSTR(",TEMP=%.01f"), gprs_df.temp );
 		}
 	}
 }

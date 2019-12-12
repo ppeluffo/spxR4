@@ -253,7 +253,7 @@ static void pv_data_read_temp( void )
 	if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
 		return;
 
-	psensor_read(&data_df.temp);
+	tempsensor_read(&data_df.temp);
 
 }
 //------------------------------------------------------------------------------------

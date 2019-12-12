@@ -50,7 +50,7 @@ uint8_t i2c_error_code = 0;
 	//    Largo: 1 byte indica el largo. El FRTOS espera 1 byte.
 	if ( i2c_bus_address == BUSADDR_EEPROM_M2402 ) {
 		dev_address_length = 2;	// Las direccione de la EEprom son de 16 bits
-	} else if ( i2c_bus_address == BUSADDR_PSENS ) {
+	} else if ( i2c_bus_address == BUSADDR_BPS120 ) {
 		dev_address_length = 0;	//
 	} else{
 		dev_address_length = 1;
@@ -216,8 +216,11 @@ uint8_t pv_i2_addr_2_idx( uint8_t i2c_bus_address )
 	case BUSADDR_INA_C:
 		return(6);
 		break;
-	case BUSADDR_PSENS:
+	case BUSADDR_BPS120:
 		return(7);
+		break;
+	case BUSADDR_ADT7410:
+		return(8);
 		break;
 	default:
 		return(0);

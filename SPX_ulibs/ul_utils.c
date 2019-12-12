@@ -356,7 +356,7 @@ void u_df_print_psensor( dataframe_s *df )
 	if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
 		return;
 
-	xprintf_P(PSTR(",%s=%.03f"), systemVars.psensor_conf.name, df->psensor );
+	xprintf_P(PSTR(",%s=%.01f"), systemVars.psensor_conf.name, df->psensor );
 
 }
 //------------------------------------------------------------------------------------
@@ -366,7 +366,7 @@ void u_df_print_temp( dataframe_s *df )
 	if ( ! strcmp ( systemVars.psensor_conf.name, "X" ) )
 		return;
 
-	xprintf_P(PSTR(",TEMP=%.03f"), df->temp );
+	xprintf_P(PSTR(",TEMP=%.01f"), df->temp );
 
 }
 //------------------------------------------------------------------------------------

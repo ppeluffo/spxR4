@@ -894,38 +894,45 @@ char *p = NULL;
 //-------------------------------------------------------------------------------------
 static uint8_t pv_init_config_psensor(void)
 {
-//	La linea recibida trae: PSENSOR=0,1000:
+//	La linea recibida trae: PSENSOR=PSENS,1480,6200,0.0,28.5,0.0:
 
-char localStr[32] = { 0 };
-char *stringp = NULL;
-char *tk_id = NULL;
-char *tk_pname = NULL;
-char *tk_pmin = NULL;
-char *tk_pmax = NULL;
-char *tk_offset = NULL;
-char *delim = ",=:><";
 char *p = NULL;
-
-	memset( &localStr, '\0', sizeof(localStr) );
+char localStr[48] = { 0 };
+char *stringp = NULL;
+char *tk_name = NULL;
+char *tk_countMin = NULL;
+char *tk_countMax = NULL;
+char *tk_pMin = NULL;
+char *tk_pMax = NULL;
+char *tk_offset = NULL;
+char *delim = ",=:;><";
 
 	p = strstr( (const char *)&pv_gprsRxCbuffer.buffer, "PSENSOR=");
-	if ( p == NULL ) {
-		return(0);
-	}
+	if ( p != NULL ) {
+		memset( &localStr, '\0', sizeof(localStr) );
+		memcpy(localStr,p,sizeof(localStr));
 
-	// Copio el mensaje enviado a un buffer local porque la funcion strsep lo modifica.
-	memset(localStr,'\0',32);
-	memcpy(localStr,p,sizeof(localStr));
+		stringp = localStr;
+		tk_name = strsep(&stringp,delim);		// PSENSOR
+		tk_name = strsep(&stringp,delim);		// PSENS
+		tk_countMin = strsep(&stringp,delim);	// 1480
+		tk_countMax  = strsep(&stringp,delim);	// 6200
+		tk_pMin  = strsep(&stringp,delim);		// 0.0
+		tk_pMax  = strsep(&stringp,delim);		// 28.5
+		tk_offset  = strsep(&stringp,delim);	// 0.0
 
-	stringp = localStr;
-	tk_id = strsep(&stringp,delim);			//PSENSOR
-	tk_pname = strsep(&stringp,delim);		// pname
-	tk_pmin = strsep(&stringp,delim);		// pmin
-	tk_pmax  = strsep(&stringp,delim); 		// pmax
-	tk_offset  = strsep(&stringp,delim); 	//
-	psensor_config( tk_pname, tk_pmin, tk_pmax, tk_offset );
-	if ( systemVars.debug == DEBUG_GPRS ) {
-		xprintf_P( PSTR("GPRS: Reconfig PSENSOR\r\n\0"));
+		xprintf_P(PSTR("GPRS DEBUG STRINGP [%s]\r\n"), stringp);
+		xprintf_P(PSTR("GPRS DEBUG PMAX [%s]\r\n"), tk_pMax);
+		xprintf_P(PSTR("GPRS DEBUG OFFSET [%s]\r\n"), tk_offset);
+
+		psensor_config(tk_name, tk_countMin, tk_countMax, tk_pMin, tk_pMax, tk_offset );
+
+		if ( systemVars.debug == DEBUG_GPRS ) {
+			xprintf_P( PSTR("GPRS: Reconfig PSENSOR\r\n\0"));
+		}
+
+		u_save_params_in_NVMEE();
+
 	}
 
 	return(1);

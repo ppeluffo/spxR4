@@ -58,14 +58,14 @@
 #include "l_printf.h"
 #include "l_rangeMeter.h"
 #include "l_bytes.h"
-#include "l_psensor.h"
+#include "l_bps120.h"
 #include "l_adt7410.h"
 
 //------------------------------------------------------------------------------------
 // DEFINES
 //------------------------------------------------------------------------------------
-#define SPX_FW_REV "2.0.7"
-#define SPX_FW_DATE "@ 20191115"
+#define SPX_FW_REV "2.0.8"
+#define SPX_FW_DATE "@ 20191212"
 
 #define SPX_HW_MODELO "spxR4 HW:xmega256A3B R1.1"
 #define SPX_FTROS_VERSION "FW:FRTOS10 TICKLESS"
@@ -303,10 +303,13 @@ typedef struct {
 // Configuracion del sensor i2c de presion
 typedef struct {
 	char name[PARAMNAME_LENGTH];
-	float pmax;
+	uint16_t count_min;
+	uint16_t count_max;
 	float pmin;
+	float pmax;
 	float offset;
 } psensor_conf_t;
+
 
 typedef struct {
 
@@ -374,10 +377,21 @@ void range_config_defaults(void);
 
 // PSENSOR
 void psensor_init(void);
-bool  psensor_read( float *psens );
-void psensor_test_read (void);
-bool psensor_config ( char *s_pname, char *s_pmin, char *s_pmax, char *s_offset  );
+bool psensor_config ( char *s_pname, char *s_countMin, char *s_countMax, char *s_pmin, char *s_pmax , char *s_offset );
 void psensor_config_defaults(void);
+//bool psensor_read( float *presion );
+//void psensor_test_read (void);
+bool psensor_read( float *presion );
+bool psensor_test_read (void);
+void psensor_print(file_descriptor_t fd, float presion );
+uint8_t psensor_checksum(void);
+bool psensor_config_autocalibrar( char *s_mag );
+
+// TEMPSENSOR
+void tempsensor_init(void);
+bool tempsensor_read( float *tempC );
+void tempsensor_test_read (void);
+void tempsensor_print(file_descriptor_t fd, float temp );
 
 // AINPUTS
 void ainputs_prender_12V_sensors(void);

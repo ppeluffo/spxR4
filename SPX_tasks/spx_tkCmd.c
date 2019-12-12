@@ -243,8 +243,11 @@ uint8_t VA_cnt, VB_cnt, VA_status, VB_status;
 		}
 
 		// Psensor
-		if ( strcmp ( systemVars.psensor_conf.name, "X" ) != 0 ) {
-			xprintf_P( PSTR("  psensor: %s (%.03f,%.03f, %.03f)\r\n\0"), systemVars.psensor_conf.name, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax, systemVars.psensor_conf.offset);
+		// Psensor
+		if ( strcmp ( systemVars.psensor_conf.name, "X" ) == 0 ) {
+			xprintf_P( PSTR("  psensor: X\r\n\0"));
+		} else {
+			xprintf_P( PSTR("  psensor: %s (%d-%d / %.01f-%.01f)[offset=%0.02f]\r\n\0"), systemVars.psensor_conf.name, systemVars.psensor_conf.count_min, systemVars.psensor_conf.count_max, systemVars.psensor_conf.pmin, systemVars.psensor_conf.pmax, systemVars.psensor_conf.offset );
 		}
 
 	}
@@ -519,10 +522,18 @@ int16_t range = 0;
 
 	FRTOS_CMD_makeArgv();
 
-	// PSENS
-	// read psens
+
+	// TEMP
+	// read temp
+	if (!strcmp_P( strupr(argv[1]), PSTR("TEMP\0")) && ( tipo_usuario == USER_TECNICO) ) {
+		tempsensor_test_read();
+		return;
+	}
+
+	// PSENSOR
+	// read psensor
 	if (!strcmp_P( strupr(argv[1]), PSTR("PSENSOR\0")) && ( tipo_usuario == USER_TECNICO) ) {
-		psensor_test_read ();
+		psensor_test_read();
 		return;
 	}
 
@@ -758,8 +769,12 @@ bool retS = false;
 	}
 
 	// AUTOCAL
-	// config autocal {ch} {mag}
+	// config autocal {ch,PSENSOR} {mag}
 	if (!strcmp_P( strupr(argv[1]), PSTR("AUTOCAL\0")) ) {
+		if (!strcmp_P( strupr(argv[2]), PSTR("PSENSOR\0")) ) {
+			psensor_config_autocalibrar( argv[3] ) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
+			return;
+		}
 		ainputs_config_autocalibrar( argv[2], argv[3] ) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
 		return;
 	}
@@ -802,9 +817,9 @@ bool retS = false;
 	}
 
 	// PSENSOR
-	// config psensor pmin pmax
+	// config psensor name countMin countMax pmin pmax offset
 	if (!strcmp_P( strupr(argv[1]), PSTR("PSENSOR\0")) ) {
-		psensor_config( argv[2], argv[3], argv[4], argv[5]) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
+		psensor_config( argv[2], argv[3], argv[4], argv[5], argv[6], argv[7] ) ? pv_snprintfP_OK() : pv_snprintfP_ERR();
 		return;
 	}
 
@@ -979,6 +994,7 @@ static void cmdHelpFunction(void)
 			xprintf_P( PSTR("  (ee,nvmee,rtcram) {pos} {lenght}\r\n\0"));
 			xprintf_P( PSTR("  ina (id) {conf|chXshv|chXbusv|mfid|dieid}\r\n\0"));
 			xprintf_P( PSTR("  i2cscan {busaddr}\r\n\0"));
+			xprintf_P( PSTR("  temp,psensor\r\n\0"));
 			if ( spx_io_board == SPX_IO8CH ) {
 				xprintf_P( PSTR("  mcp {regAddr}\r\n\0"));
 			}
@@ -988,7 +1004,6 @@ static void cmdHelpFunction(void)
 			if ( spx_io_board == SPX_IO5CH ) {
 				xprintf_P( PSTR("  ach {0..4}, battery\r\n\0"));
 				xprintf_P( PSTR("  range\r\n\0"));
-				xprintf_P( PSTR("  psensor\r\n\0"));
 			} else if ( spx_io_board == SPX_IO8CH ) {
 				xprintf_P( PSTR("  ach {0..7}\r\n\0"));
 			}
@@ -1025,14 +1040,14 @@ static void cmdHelpFunction(void)
 		xprintf_P( PSTR("  debug {none,counter,data, gprs, outputs, piloto }\r\n\0"));
 		xprintf_P( PSTR("  analog {0..%d} aname imin imax mmin mmax\r\n\0"),( NRO_ANINPUTS - 1 ) );
 		xprintf_P( PSTR("  offset {ch} {mag}, inaspan {ch} {mag}\r\n\0"));
-		xprintf_P( PSTR("  autocal {ch} {mag}\r\n\0"));
+		xprintf_P( PSTR("  autocal {ch,PSENSOR} {mag}\r\n\0"));
 		xprintf_P( PSTR("  ical {ch} {imin | imax}\r\n\0"));
 		xprintf_P( PSTR("  digital {0..%d} dname tpoll\r\n\0"), ( NRO_DINPUTS - 1 ) );
 		xprintf_P( PSTR("  counter {0..%d} cname magPP pw(ms) period(ms) speed(LS/HS)\r\n\0"), ( NRO_COUNTERS - 1 ) );
 
 		if ( spx_io_board == SPX_IO5CH ) {
 			xprintf_P( PSTR("  rangemeter {on|off}\r\n\0"));
-			xprintf_P( PSTR("  psensor {name} {pmin} {pmax} {offset}\r\n\0"));
+			xprintf_P( PSTR("  psensor name countMin countMax pmin pmax offset\r\n\0"));
 		}
 
 		xprintf_P( PSTR("  outmode { off | perf | plt | cons }\r\n\0"));
