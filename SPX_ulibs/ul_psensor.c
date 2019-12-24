@@ -7,9 +7,18 @@
 
 #include "spx.h"
 
+bool psensor_present = false;
+
 //------------------------------------------------------------------------------------
 void psensor_init(void)
 {
+	if ( I2C_scan_device( BUSADDR_BPS120 ) ) {
+		psensor_present = true;
+		xprintf_P(PSTR("PSENSOR detected.\r\n"));
+	} else {
+		psensor_present = false;
+		xprintf_P(PSTR("PSENSOR not detected\r\n"));
+	}
 }
 //------------------------------------------------------------------------------------
 void psensor_config_defaults(void)
@@ -77,6 +86,12 @@ uint8_t lsbPres = 0;
 float pres = 0;
 int32_t pcounts;
 
+	if ( ! psensor_present ) {
+		xprintf_P(PSTR("ERROR: psensor not present.\r\n\0"));
+		*presion = -100;
+		return(false);
+	}
+
 	xBytes = bps120_raw_read( buffer );
 	if ( xBytes == -1 ) {
 		xprintf_P(PSTR("ERROR: I2C: psensor_read\r\n\0"));
@@ -120,6 +135,11 @@ uint8_t msbPres = 0;
 uint8_t lsbPres = 0;
 float pres = 0;
 int32_t pcounts;
+
+	if ( ! psensor_present ) {
+		xprintf_P(PSTR("ERROR: psensor not present.\r\n\0"));
+		return(false);
+	}
 
 	xBytes = bps120_raw_read( buffer );
 	if ( xBytes == -1 ) {
@@ -180,6 +200,11 @@ uint8_t msbPres = 0;
 uint8_t lsbPres = 0;
 float pres = 0;
 int32_t pcounts;
+
+	if ( ! psensor_present ) {
+		xprintf_P(PSTR("ERROR: psensor not present.\r\n\0"));
+		return(false);
+	}
 
 	pres_real = atof(s_mag);
 

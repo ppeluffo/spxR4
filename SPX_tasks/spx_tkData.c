@@ -155,7 +155,10 @@ static void pv_data_init(void)
 
     }
 
-   sensores_prendidos = false;
+    psensor_init();
+    tempsensor_init();
+
+    sensores_prendidos = false;
 
 }
 //------------------------------------------------------------------------------------

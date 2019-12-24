@@ -8,9 +8,18 @@
 
 #include "spx.h"
 
+bool ptemp_present = false;
+
 //------------------------------------------------------------------------------------
 void tempsensor_init(void)
 {
+	if ( I2C_scan_device( BUSADDR_ADT7410 ) ) {
+		ptemp_present = true;
+		xprintf_P(PSTR("PTEMP detected.\r\n"));
+	} else {
+		ptemp_present = false;
+		xprintf_P(PSTR("PTEMP not detected\r\n"));
+	}
 }
 //------------------------------------------------------------------------------------
 bool tempsensor_read( float *tempC )
@@ -21,6 +30,12 @@ char buffer[4] = { 0 };
 uint8_t msbTemp = 0;
 uint8_t lsbTemp = 0;
 uint16_t temp = 0;
+
+	if ( ! ptemp_present ) {
+		xprintf_P(PSTR("ERROR: ptemp not present.\r\n\0"));
+		*tempC = -100;
+		return(false);
+	}
 
 	xBytes = adt7410_raw_read( buffer );
 	if ( xBytes == -1 ) {
@@ -58,6 +73,10 @@ uint8_t lsbTemp = 0;
 uint16_t temp = 0;
 float tempC = 0;
 
+	if ( ! ptemp_present ) {
+		xprintf_P(PSTR("ERROR: ptemp not present.\r\n\0"));
+		return;
+	}
 
 	xBytes = adt7410_raw_read( buffer );
 	if ( xBytes == -1 )
